@@ -28,43 +28,105 @@ const initializeDBAndServer = async () =>{
 initializeDBAndServer();
 
 app.get('/todos/', async(request, response) => {
-const {status} = request.query;
-const getQuery = `SELECT * FROM todo
-WHERE status = '${status}';`;
-const dbResponse = await db.all(getQuery);
-response.send(dbResponse);
+    const {status} = request.query;
+    const getQuery = `SELECT * FROM todo
+    WHERE status LIKE '%${status}%';`;
+    const dbResponse = await db.all(getQuery);
+    response.send(dbResponse);
 });
 
+app.get('/todos/', async(request, response) => {
+    const {priority} = request.query;
+    const getQuery = `SELECT * FROM todo
+    WHERE priority LIKE '%${priority}%';`;
+    const dbResponse = await db.all(getQuery);
+    response.send(dbResponse);
+});
+
+app.get('/todos/', async(request, response) => {
+    const {priority, status} = request.query;
+    const getQuery = `SELECT * FROM todo
+    WHERE status LIKE '%${status}%',
+    priority LIKE '%${priority}%';`;
+    const dbResponse = await db.all(getQuery);
+    response.send(dbResponse);
+});
+
+app.get('/todos/', async(request, response) => {
+    const {search_q = " "} = request.query;
+    const getQuery = `SELECT * FROM todo
+    WHERE todo LIKE '%${search_q}%';`;
+    const dbResponse = await db.all(getQuery);
+    response.send(dbResponse);
+});
+
+
 app.get('/todos/:todoId/', async(request, response) =>{
-const {todoId} = request.params;
-const getQuery = `SELECT * FROM todo
-WHERE id = '${todoId}';`;
-const dbResponse = await db.get(getQuery);
-response.send(dbResponse);
+    const {todoId} = request.params;
+    const getQuery = `SELECT * FROM todo
+    WHERE id = '${todoId}';`;
+    const dbResponse = await db.get(getQuery);
+    response.send(dbResponse);
 });
 
 app.post('/todos/', async (request, response) => {
+    const todoDetails = request.body;
+    const {id, todo, priority, status} = todoDetails;
+    const postQuery = `INSERT INTO todo(id,todo,priority,status)
+    VALUES('${id}','${todo}','${priority}','${status}');`;
+    const dbResponse = await db.run(postQuery);
+    const todoId = dbResponse.lastID;
+    response.send('Todo Successfully Added');
+});
+
+
+app.delete('/todos/:todoId/', async(request, response) => {
+    const {todoId} = request.params;
+    const delQuery = `DELETE FROM todo
+    WHERE id = '${todoId}';`;
+    await db.run(delQuery);
+    response.send('Todo Deleted');
+})
+
+
+
+
+app.put('/todos/:todoId/', async(request, response) =>{
+const {todoId} = request.params;
 const todoDetails = request.body;
-const {id, todo, priority, status} = todoDetails;
-const postQuery = `INSERT INTO todo(id,todo,priority,status)
-VALUES('${id}','${todo}','${priority}','${status}');`;
-const dbResponse = await db.run(postQuery);
-const todoId = dbResponse.lastID;
-response.send('Todo Successfully Added');
+const{todo,priority} = todoDetails;
+const {status}= request.query;
+const putQuery = `UPDATE todo
+SET
+todo = '${todo}',
+status = '${status}',
+priority = '${priority},'
+WHERE id = '${todoId}';`;
+const dbResponse = await db.run(putQuery);
+response.send("Status Updated");
 });
 
 app.put('/todos/:todoId/', async(request, response) =>{
 const {todoId} = request.params;
 const todoDetails = request.body;
-const {id,todo,priority,status}= todoDetails;
+const {priority}= request.query;
 const putQuery = `UPDATE todo
 SET 
-id = '${id}',
-todo = '${todo}',
-priority = '${priority}',
-status = '${status}'
+priority = '${priority}'
 WHERE id = '${todoId}';`;
 const dbResponse = await db.run(putQuery);
-response.send("")
-})
+response.send("Priority Updated");
+});
+
+app.put('/todos/:todoId/', async(request, response) =>{
+const {todoId} = request.params;
+const todoDetails = request.body;
+const {todo}= todoDetails;
+const putQuery = `UPDATE todo
+SET 
+todo = '${todo}'
+WHERE id = '${todoId}';`;
+const dbResponse = await db.run(putQuery);
+response.send("Todo Updated");
+});
 
